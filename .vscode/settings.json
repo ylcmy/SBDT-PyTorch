@@ -1,0 +1,3 @@
+{
+  "python.analysis.extraPaths": ["./stream_nn_td_binary/SBDT_net"]
+}
