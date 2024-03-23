@@ -48,9 +48,10 @@ class PBP:
                 self.do_first_pass(X_train, y_train)
 
                 # We refine the prior
-                params = self.network.get_params()
-                params = self.prior.refine_prior(params)
-                self.network.set_params(params)
+                with torch.no_grad():
+                    params = self.network.get_params()
+                    params = self.prior.refine_prior(params)
+                    self.network.set_params(params)
 
                 print(i + 1)
 

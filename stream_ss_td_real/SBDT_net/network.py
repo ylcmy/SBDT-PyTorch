@@ -123,19 +123,20 @@ class Network:
         return torch.cat(embed_list).flatten()
 
     def get_params(self):
-        m_w = [layer.m_w.clone() for layer in self.layers]
-        v_w = [layer.v_w.clone() for layer in self.layers]
-        m_u = [embed.m_u.clone() for embed in self.params_embed]
-        v_u = [embed.v_u.clone() for embed in self.params_embed]
+        with torch.no_grad():
+            m_w = [layer.m_w.clone() for layer in self.layers]
+            v_w = [layer.v_w.clone() for layer in self.layers]
+            m_u = [embed.m_u.clone() for embed in self.params_embed]
+            v_u = [embed.v_u.clone() for embed in self.params_embed]
 
-        return {
-            "m_w": m_w,
-            "v_w": v_w,
-            "m_u": m_u,
-            "v_u": v_u,
-            "a": self.a.clone(),
-            "b": self.b.clone(),
-        }
+            return {
+                "m_w": m_w,
+                "v_w": v_w,
+                "m_u": m_u,
+                "v_u": v_u,
+                "a": self.a.clone(),
+                "b": self.b.clone(),
+            }
 
     def set_params(self, params):
         with torch.no_grad():

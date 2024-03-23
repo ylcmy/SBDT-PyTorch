@@ -1,6 +1,5 @@
 import math
 import os
-import sys
 import time
 
 import numpy as np
@@ -35,8 +34,6 @@ n_stream_batch = 1
 mini_batch_list = [64, 128, 512]
 R_list = [8]
 avg_num = 3
-
-help_str = "mv_" + str(R_list[0])
 dir = "./new_result"
 if not os.path.exists(dir):
     os.makedirs(dir)
@@ -45,6 +42,7 @@ mode = "minibatch"  #'single' #'minibatch'
 
 for mini_batch in mini_batch_list:
     for R in R_list:
+        help_str = "mv_" + str(R)
         mse_list = np.zeros(avg_num)
         set_start = time.time()
         time_list = np.zeros(avg_num)
@@ -101,7 +99,7 @@ for mini_batch in mini_batch_list:
         )
         print("\n take %g seconds to finish the setting" % (time.time() - set_start))
 
-        file_name = "mv1m_%s_%s" % (mini_batch, R)
+        file_name = "mv1m_result_v1.txt"
         file = os.path.join(dir, file_name)
         f = open(file, "a+")
         f.write("R = %d, mini_batch =%s " % (R, mini_batch))
