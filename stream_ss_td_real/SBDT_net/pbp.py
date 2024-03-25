@@ -7,13 +7,14 @@ from .prior import Prior
 
 class PBP:
     def __init__(
-        self, layer_sizes, mean_y_train, std_y_train, R, ndims, n_stream_batch
+        self, layer_sizes, mean_y_train, std_y_train, R, ndims, n_stream_batch, device
     ):
         var_targets = 1
         self.std_y_train = std_y_train
         self.mean_y_train = mean_y_train
         self.stream_batch = n_stream_batch
         self.R = R
+        self.device = device
 
         # We initialize the prior
         self.prior = Prior(layer_sizes, var_targets, R, ndims)
@@ -28,6 +29,7 @@ class PBP:
             params["a"],
             params["b"],
             n_stream_batch,
+            device=device,
         )
 
     def do_pbp(self, X_train, y_train, n_iterations):
@@ -41,7 +43,7 @@ class PBP:
                 params = self.prior.refine_prior(params)
                 self.network.set_params(params)
 
-            print("0")
+            # print("0")
 
             for i in range(int(n_iterations) - 1):
                 # We do one more pass
@@ -59,7 +61,7 @@ class PBP:
         return self.network.output_deterministic(test_x)
 
     def get_deterministic_output(self, X_test):
-        output = torch.zeros(X_test.shape[0])
+        output = torch.zeros(X_test.shape[0], device=self.device)
         for i in range(X_test.shape[0]):
             output[i] = self.predict_deterministic(X_test[i, :])
             output[i] = output[i] * self.std_y_train + self.mean_y_train
@@ -77,8 +79,8 @@ class PBP:
             new_params = self.network.get_params()
             self.network.remove_invalid_updates(new_params, old_params)
             self.network.set_params(new_params)
-            if counter * self.stream_batch % 1000 == 0:
-                print(".", end="")
+            # if counter * self.stream_batch % 1000 == 0:
+            #     print(".", end="")
             counter += self.stream_batch
         print()
 

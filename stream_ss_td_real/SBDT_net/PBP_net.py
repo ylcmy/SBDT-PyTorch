@@ -22,6 +22,7 @@ class PBP_net:
         n_stream_batch=1,
         mini_batch=100,
         mode="single",
+        device="cpu",
     ):
         self.R = R
         self.nmod = len(ndims)
@@ -46,6 +47,7 @@ class PBP_net:
             self.R,
             ndims,
             n_stream_batch,
+            device,
         )
 
     def pbp_train(self, X_test, y_test, help_str=""):

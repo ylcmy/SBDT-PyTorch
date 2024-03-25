@@ -8,6 +8,7 @@ import torch.nn.functional as F
 from SBDT_net import PBP_net
 
 np.random.seed(1)
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 # load movielens 1m
 ndims = [6040, 3706]
@@ -16,10 +17,10 @@ y = np.loadtxt("./data_real/movielens_1m/mv_train_y.txt").astype(int)
 ind_test = np.loadtxt("./data_real/movielens_1m/mv_test_ind.txt").astype(int)
 y_test = np.loadtxt("./data_real/movielens_1m/mv_test_y.txt").astype(int)
 
-ind = torch.from_numpy(ind).float()
-y = torch.from_numpy(y).float()
-ind_test = torch.from_numpy(ind_test).float()
-y_test = torch.from_numpy(y_test).float()
+ind = torch.from_numpy(ind).float().to(device=device)
+y = torch.from_numpy(y).float().to(device=device)
+ind_test = torch.from_numpy(ind_test).float().to(device=device)
+y_test = torch.from_numpy(y_test).float().to(device=device)
 
 print("loaded")
 
@@ -31,9 +32,9 @@ n_stream_batch = 1
 # mini_batch_list = [256]
 # R_list = [3,5,8,10]
 
-mini_batch_list = [64, 128, 512]
+mini_batch_list = [128, 256]
 R_list = [8]
-avg_num = 3
+avg_num = 1
 dir = "./new_result"
 if not os.path.exists(dir):
     os.makedirs(dir)
@@ -42,7 +43,7 @@ mode = "minibatch"  #'single' #'minibatch'
 
 for mini_batch in mini_batch_list:
     for R in R_list:
-        help_str = "mv_" + str(R)
+        help_str = "mv_" + str(mini_batch) + "_" + str(R)
         mse_list = np.zeros(avg_num)
         set_start = time.time()
         time_list = np.zeros(avg_num)
@@ -69,6 +70,7 @@ for mini_batch in mini_batch_list:
                 n_stream_batch=n_stream_batch,
                 mode=mode,
                 mini_batch=mini_batch,
+                device=device,
             )
 
             running_performance = np.array(net.pbp_train(X_test, y_test, help_str))

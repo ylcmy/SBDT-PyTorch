@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from SBDT_net import PBP_net
 
 np.random.seed(1)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # load acc
 
@@ -16,10 +17,10 @@ ndims = [3000, 150, 30000]
 ind, y = data_loader.load_acc_train(fold_path="./data_real/acc/ibm-large-tensor.txt")
 ind_test, y_test = data_loader.load_acc_test_long()
 
-ind = torch.from_numpy(ind).float()
-y = torch.from_numpy(y).float()
-X_test = torch.from_numpy(ind_test - 1).float()
-y_test = torch.from_numpy(y_test).float()
+ind = torch.from_numpy(ind).float().to(device=device)
+y = torch.from_numpy(y).float().to(device=device)
+X_test = torch.from_numpy(ind_test - 1).float().to(device=device)
+y_test = torch.from_numpy(y_test).float().to(device=device)
 
 print("loaded")
 
@@ -32,7 +33,7 @@ n_stream_batch = 1
 
 mini_batch_list = [256]  # [64,128,512]
 R_list = [3, 5, 8, 10]
-avg_num = 3
+avg_num = 1
 dir = "./new_result"
 if not os.path.exists(dir):
     os.makedirs(dir)
@@ -40,7 +41,7 @@ mode = "minibatch"  #'single' #'minibatch'
 
 for mini_batch in mini_batch_list:
     for R in R_list:
-        help_str = "acc_" + str(R)
+        help_str = "acc_" + str(mini_batch) + "_" + str(R)
         mse_list = np.zeros(avg_num)
         set_start = time.time()
         time_list = np.zeros(avg_num)

@@ -32,11 +32,11 @@ n_stream_batch = 1
 R_list = [3, 5, 8, 10]
 mini_batch_list = [256]  # [64,128,512]
 
-help_str = "anime" + str(R_list[0])
 mode = "minibatch"
 
 for mini_batch in mini_batch_list:
     for R in R_list:
+        help_str = "anime_" + str(mini_batch) + "_" + str(R)
         auc_list = np.zeros(avg_num)
         set_start = time.time()
         time_list = np.zeros(avg_num)
