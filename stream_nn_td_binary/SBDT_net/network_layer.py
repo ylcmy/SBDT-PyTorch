@@ -5,13 +5,14 @@ import torch.nn.functional as F
 
 
 class NetworkLayer:
-    def __init__(self, m_w_init, v_w_init, non_linear=True):
+    def __init__(self, m_w_init, v_w_init, non_linear=True, device="cpu"):
         # self.m_w = torch.tensor(m_w_init, dtype=torch.float32, requires_grad=True)
         # self.v_w = torch.tensor(v_w_init, dtype=torch.float32, requires_grad=True)
-        self.m_w = m_w_init.clone().detach().requires_grad_(True)
-        self.v_w = v_w_init.clone().detach().requires_grad_(True)
+        self.m_w = m_w_init.clone().to(device).detach().requires_grad_(True)
+        self.v_w = v_w_init.clone().to(device).detach().requires_grad_(True)
         self.non_linear = non_linear
         self.n_inputs = m_w_init.shape[1]
+        self.device = device
 
     @staticmethod
     def n_pdf(x):
@@ -61,7 +62,11 @@ class NetworkLayer:
 
     def output_deterministic(self, output_previous):
         output_previous_with_bias = torch.cat(
-            [output_previous, torch.ones(1, output_previous.shape[1])], dim=0
+            [
+                output_previous,
+                torch.ones(1, output_previous.shape[1], device=self.device),
+            ],
+            dim=0,
         ) / math.sqrt(self.n_inputs)
 
         a = torch.mm(self.m_w, output_previous_with_bias)

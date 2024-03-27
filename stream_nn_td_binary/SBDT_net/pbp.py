@@ -7,7 +7,7 @@ from .prior import Prior
 
 class PBP:
     def __init__(
-        self, layer_sizes, mean_y_train, std_y_train, R, ndims, n_stream_batch
+        self, layer_sizes, mean_y_train, std_y_train, R, ndims, n_stream_batch, device
     ):
         var_targets = 1
         self.std_y_train = std_y_train
@@ -28,6 +28,7 @@ class PBP:
             params["a"],
             params["b"],
             n_stream_batch,
+            device,
         )
 
     def do_pbp(self, X_train, y_train, n_iterations):

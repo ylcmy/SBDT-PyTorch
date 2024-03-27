@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from SBDT_net import PBP_net
 
 np.random.seed(1)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 # load acc
 
@@ -42,7 +42,7 @@ mode = "minibatch"  #'single' #'minibatch'
 for mini_batch in mini_batch_list:
     for R in R_list:
         help_str = "acc_" + str(mini_batch) + "_" + str(R)
-        mse_list = np.zeros(avg_num)
+        rmse_list = np.zeros(avg_num)
         set_start = time.time()
         time_list = np.zeros(avg_num)
         for i in range(avg_num):
@@ -70,6 +70,7 @@ for mini_batch in mini_batch_list:
 
             running_performance = np.array(net.pbp_train(X_test, y_test, help_str))
             file_name = "running_result/%s.txt" % (help_str)
+            os.makedirs(os.path.dirname(file_name), exist_ok=True)
             np.savetxt(file_name, np.c_[running_performance])
             print("\n  saved!\n")
 
@@ -79,19 +80,19 @@ for mini_batch in mini_batch_list:
 
             with torch.no_grad():
                 m, a, b = net.predict_deterministic(X_test)
-                # We compute the test MSE
-                mse = F.mse_loss(m, y_test).item()
-                print("mse = %f" % (mse))
+                # We compute the test RMSE
+                rmse = torch.sqrt(F.mse_loss(m, y_test)).item()
+                print("rmse = %f" % (rmse))
                 print("a, b, mean(tau), var(tau)")
                 print(
                     "take %g seconds to finish fold %d" % (time.time() - fold_start, i)
                 )
                 print(a, b, a / b, a / (b**2))
-                mse_list[i] = mse
+                rmse_list[i] = rmse
 
         print(
-            "\navg of mse: %.6g , std of mse is %.6g"
-            % (mse_list.mean(), mse_list.std())
+            "\navg of rmse: %.6g , std of rmse is %.6g"
+            % (rmse_list.mean(), rmse_list.std())
         )
         print("\n take %g seconds to finish the setting" % (time.time() - set_start))
 
@@ -100,10 +101,10 @@ for mini_batch in mini_batch_list:
         f = open(file, "a+")
         f.write("R = %d, mini_batch =%s " % (R, mini_batch))
         f.write(
-            "\navg of mse: %.6g , std of mse is %.6g"
-            % (mse_list.mean(), mse_list.std())
+            "\navg of rmse: %.6g , std of rmse is %.6g"
+            % (rmse_list.mean(), rmse_list.std())
         )
-        f.write("\nthe exact value is %s" % str(mse_list))
+        f.write("\nthe exact value is %s" % str(rmse_list))
         f.write("\nmean(tau): %.5g, var(tau): %.5g" % (a / b, a / (b**2)))
         final_time = time.time() - set_start
         f.write(

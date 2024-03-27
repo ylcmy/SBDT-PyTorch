@@ -70,10 +70,12 @@ for mini_batch in mini_batch_list:
                 n_stream_batch=n_stream_batch,
                 mode=mode,
                 mini_batch=mini_batch,
+                device=device,
             )
 
             running_performance = np.array(net.pbp_train(X_test, y_test, help_str))
             file_name = "running_result/%s.txt" % (help_str)
+            os.makedirs(os.path.dirname(file_name), exist_ok=True)
             np.savetxt(file_name, np.c_[running_performance])
             print("\n  saved!\n")
 

@@ -7,16 +7,25 @@ from .network_layer import NetworkLayer
 
 class Network:
     def __init__(
-        self, m_w_init, v_w_init, m_u_init, v_u_init, a_init, b_init, n_stream_batch
+        self,
+        m_w_init,
+        v_w_init,
+        m_u_init,
+        v_u_init,
+        a_init,
+        b_init,
+        n_stream_batch,
+        device,
     ):
         self.n_stream_batch = n_stream_batch
+        self.device = device
         self.layers = []
 
         if len(m_w_init) > 1:
             for m_w, v_w in zip(m_w_init[:-1], v_w_init[:-1]):
-                self.layers.append(NetworkLayer(m_w, v_w, True))
+                self.layers.append(NetworkLayer(m_w, v_w, True, device))
 
-        self.layers.append(NetworkLayer(m_w_init[-1], v_w_init[-1], False))
+        self.layers.append(NetworkLayer(m_w_init[-1], v_w_init[-1], False, device))
 
         self.params_m_w = []
         self.params_v_w = []
@@ -29,7 +38,7 @@ class Network:
 
         if len(m_u_init) > 1:
             for m_u, v_u in zip(m_u_init, v_u_init):
-                self.params_embed.append(Embedding(m_u, v_u))
+                self.params_embed.append(Embedding(m_u, v_u, device))
 
         self.params_m_u = []
         self.params_v_u = []
@@ -38,8 +47,12 @@ class Network:
             self.params_m_u.append(embed.m_u)
             self.params_v_u.append(embed.v_u)
 
-        self.a = torch.tensor(float(a_init), dtype=torch.float32, requires_grad=True)
-        self.b = torch.tensor(float(b_init), dtype=torch.float32, requires_grad=True)
+        self.a = torch.tensor(
+            float(a_init), dtype=torch.float32, device=device, requires_grad=True
+        )
+        self.b = torch.tensor(
+            float(b_init), dtype=torch.float32, device=device, requires_grad=True
+        )
 
     def output_deterministic(self, x):
         x = self.get_embed(x).unsqueeze(-1)
@@ -55,7 +68,7 @@ class Network:
 
     def logZ_Z1_Z2(self, x, y):
         tau = self.a / self.b
-        v = torch.tensor(0.0)
+        v = torch.tensor(0.0, device=self.device)
         f = self.output_deterministic(x[0])
         y = y[0]
 
