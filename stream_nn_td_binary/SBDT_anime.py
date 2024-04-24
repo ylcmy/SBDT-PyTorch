@@ -7,7 +7,7 @@ import torch
 from SBDT_net import PBP_net
 from sklearn.metrics import roc_auc_score
 
-device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # torch.autograd.set_detect_anomaly(True)
 """
@@ -79,7 +79,7 @@ for mini_batch in mini_batch_list:
 
             with torch.no_grad():
                 m, a, b = net.predict_deterministic(X_test)
-                auc = roc_auc_score(y_test, m)
+                auc = roc_auc_score(y_test.cpu().numpy(), m)
                 # rmse = np.sqrt(np.mean((y_test - m)**2))
 
                 print("auc=%f" % (auc))

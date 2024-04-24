@@ -88,50 +88,96 @@ class Prior:
         return torch.log(x / (1 - x))
 
     def refine_prior(self, params):
+        # for i in range(len(params["m_w"])):
+        #     for j in range(params["m_w"][i].shape[0]):
+        #         for k in range(params["m_w"][i].shape[1]):
+        #             v_w_nat = 1.0 / params["v_w"][i][j, k]
+        #             m_w_nat = params["m_w"][i][j, k] / params["v_w"][i][j, k]
+
+        #             v_w_cav_nat = v_w_nat - self.v_w_hat_nat[i][j, k]
+        #             m_w_cav_nat = m_w_nat - self.m_w_hat_nat[i][j, k]
+
+        #             v_w_cav = 1.0 / v_w_cav_nat
+        #             m_w_cav = m_w_cav_nat / v_w_cav_nat
+
+        #             rho_star = torch.log(
+        #                 self.gauss_pdf(m_w_cav, 0.0, v_w_cav + self.tau_0)
+        #                 / self.gauss_pdf(m_w_cav, 0.0, v_w_cav)
+        #             )
+
+        #             v_w_til = 1 / (v_w_cav_nat + 1 / self.tau_0)
+        #             m_w_til = v_w_til * (m_w_cav / v_w_cav)
+        #             rho_til = rho_star + self.inverse_sigmoid(self.rho_0)
+
+        #             m_w_new = torch.sigmoid(rho_til) * m_w_til
+        #             v_w_new = torch.sigmoid(rho_til) * (
+        #                 v_w_til + (1 - torch.sigmoid(rho_til)) * m_w_til**2
+        #             )
+
+        #             if (
+        #                 v_w_cav > 0
+        #                 and v_w_cav < 1e6
+        #                 and v_w_new > 0
+        #                 and v_w_new < 1e6
+        #                 and ~torch.isnan(m_w_new)
+        #                 and ~torch.isnan(v_w_new)
+        #                 and ~torch.isinf(rho_star)
+        #                 and ~torch.isinf(m_w_new)
+        #             ):
+        #                 v_w_new_nat = 1.0 / v_w_new
+        #                 m_w_new_nat = m_w_new / v_w_new
+
+        #                 self.m_w_hat_nat[i].data[j, k] = m_w_new_nat - m_w_cav_nat
+        #                 self.v_w_hat_nat[i].data[j, k] = v_w_new_nat - v_w_cav_nat
+        #                 self.rho_w_hat_nat[i].data[j, k] = rho_star
+
+        #                 params["m_w"][i][j, k] = m_w_new
+        #                 params["v_w"][i][j, k] = v_w_new
+
+        # return params
         for i in range(len(params["m_w"])):
-            for j in range(params["m_w"][i].shape[0]):
-                for k in range(params["m_w"][i].shape[1]):
-                    v_w_nat = 1.0 / params["v_w"][i][j, k]
-                    m_w_nat = params["m_w"][i][j, k] / params["v_w"][i][j, k]
+            v_w_nat = 1.0 / params["v_w"][i]
+            m_w_nat = params["m_w"][i] / params["v_w"][i]
 
-                    v_w_cav_nat = v_w_nat - self.v_w_hat_nat[i][j, k]
-                    m_w_cav_nat = m_w_nat - self.m_w_hat_nat[i][j, k]
+            v_w_cav_nat = v_w_nat - self.v_w_hat_nat[i]
+            m_w_cav_nat = m_w_nat - self.m_w_hat_nat[i]
 
-                    v_w_cav = 1.0 / v_w_cav_nat
-                    m_w_cav = m_w_cav_nat / v_w_cav_nat
+            v_w_cav = 1.0 / v_w_cav_nat
+            m_w_cav = m_w_cav_nat / v_w_cav_nat
 
-                    rho_star = torch.log(
-                        self.gauss_pdf(m_w_cav, 0.0, v_w_cav + self.tau_0)
-                        / self.gauss_pdf(m_w_cav, 0.0, v_w_cav)
-                    )
+            rho_star = torch.log(
+                self.gauss_pdf(m_w_cav, 0.0, v_w_cav + self.tau_0)
+                / self.gauss_pdf(m_w_cav, 0.0, v_w_cav)
+            )
 
-                    v_w_til = 1 / (v_w_cav_nat + 1 / self.tau_0)
-                    m_w_til = v_w_til * (m_w_cav / v_w_cav)
-                    rho_til = rho_star + self.inverse_sigmoid(self.rho_0)
+            v_w_til = 1 / (v_w_cav_nat + 1 / self.tau_0)
+            m_w_til = v_w_til * (m_w_cav / v_w_cav)
+            rho_til = rho_star + self.inverse_sigmoid(self.rho_0)
 
-                    m_w_new = torch.sigmoid(rho_til) * m_w_til
-                    v_w_new = torch.sigmoid(rho_til) * (
-                        v_w_til + (1 - torch.sigmoid(rho_til)) * m_w_til**2
-                    )
+            m_w_new = torch.sigmoid(rho_til) * m_w_til
+            v_w_new = torch.sigmoid(rho_til) * (
+                v_w_til + (1 - torch.sigmoid(rho_til)) * m_w_til**2
+            )
 
-                    if (
-                        v_w_cav > 0
-                        and v_w_cav < 1e6
-                        and v_w_new > 0
-                        and v_w_new < 1e6
-                        and ~torch.isnan(m_w_new)
-                        and ~torch.isnan(v_w_new)
-                        and ~torch.isinf(rho_star)
-                        and ~torch.isinf(m_w_new)
-                    ):
-                        v_w_new_nat = 1.0 / v_w_new
-                        m_w_new_nat = m_w_new / v_w_new
+            mask = (
+                (v_w_cav > 0)
+                & (v_w_cav < 1e6)
+                & (v_w_new > 0)
+                & (v_w_new < 1e6)
+                & ~torch.isnan(m_w_new)
+                & ~torch.isnan(v_w_new)
+                & ~torch.isinf(rho_star)
+                & ~torch.isinf(m_w_new)
+            )
 
-                        self.m_w_hat_nat[i].data[j, k] = m_w_new_nat - m_w_cav_nat
-                        self.v_w_hat_nat[i].data[j, k] = v_w_new_nat - v_w_cav_nat
-                        self.rho_w_hat_nat[i].data[j, k] = rho_star
+            v_w_new_nat = 1.0 / v_w_new
+            m_w_new_nat = m_w_new / v_w_new
 
-                        params["m_w"][i][j, k] = m_w_new
-                        params["v_w"][i][j, k] = v_w_new
+            self.m_w_hat_nat[i].data[mask] = m_w_new_nat[mask] - m_w_cav_nat[mask]
+            self.v_w_hat_nat[i].data[mask] = v_w_new_nat[mask] - v_w_cav_nat[mask]
+            self.rho_w_hat_nat[i].data[mask] = rho_star[mask]
+
+            params["m_w"][i][mask] = m_w_new[mask]
+            params["v_w"][i][mask] = v_w_new[mask]
 
         return params

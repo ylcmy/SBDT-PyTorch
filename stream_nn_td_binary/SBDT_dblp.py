@@ -85,7 +85,7 @@ for mini_batch in mini_batch_list:
 
             with torch.no_grad():
                 m, a, b = net.predict_deterministic(X_test)
-                auc = roc_auc_score(y_test, m)
+                auc = roc_auc_score(y_test.cpu().numpy(), m)
                 print("auc = %f" % (auc))
                 print("a, b, mean(tau), var(tau)")
                 print(

@@ -73,7 +73,7 @@ class PBP_net:
                     with torch.no_grad():
                         m, a, b = self.pbp_instance.get_deterministic_output(X_test)
                         # We compute the test AUC
-                        auc = roc_auc_score(y_test, m)
+                        auc = roc_auc_score(y_test.cpu().numpy(), m)
                         print(
                             "after %d th batch(%.3f), the score is %.4f"
                             % (turn, float(turn) / self.N_turns, auc)

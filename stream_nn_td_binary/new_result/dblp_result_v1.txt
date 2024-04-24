@@ -1,6 +1,0 @@
-R = 8, mini_batch =128 
-avg of auc: 0.913397 , std of auc is 0
-the exact value is [0.91339675]
-mean(tau): 0, var(tau): 0
-take 5165 seconds to finish the setting, avg time is 5165 
-

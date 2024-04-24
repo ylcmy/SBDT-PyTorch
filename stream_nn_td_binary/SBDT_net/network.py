@@ -57,7 +57,7 @@ class Network:
     def output_deterministic(self, x):
         x = self.get_embed(x).unsqueeze(-1)
         for layer in self.layers:
-            x = layer.output_deterministic(x)
+            x = layer(x)
         return x[0]
 
     def output_probabilistic(self, m):

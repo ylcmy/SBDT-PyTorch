@@ -16,7 +16,7 @@ class PBP:
         self.R = R
 
         # We initialize the prior
-        self.prior = Prior(layer_sizes, var_targets, R, ndims)
+        self.prior = Prior(layer_sizes, var_targets, R, ndims, device)
 
         # We create the network
         params = self.prior.get_initial_params()
@@ -56,12 +56,13 @@ class PBP:
                 print(i + 1)
 
     def predict_deterministic(self, test_x):
-        return self.network.output_deterministic(test_x)
+        return self.network.output_deterministic(test_x).cpu()
 
     def get_deterministic_output(self, X_test):
-        output = []
-        for i in range(X_test.shape[0]):
-            output.append(self.predict_deterministic(X_test[i, :]))
+        # output = []
+        # for i in range(X_test.shape[0]):
+        #     output.append(self.predict_deterministic(X_test[i, :]))
+        output = [self.predict_deterministic(x) for x in X_test]
         params = self.network.get_params()
         return output, params["a"], params["b"]
 
