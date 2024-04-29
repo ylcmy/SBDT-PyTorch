@@ -66,18 +66,19 @@ class PBP_net:
                 self.pbp_instance.do_pbp(X_sub, y_sub, self.n_epochs)
 
                 count = count + mini_batch
-                print("finish  %d / %d " % (count, self.X_train.shape[0]) + help_str)
+                # print("finish  %d / %d " % (count, self.X_train.shape[0]) + help_str)
 
                 turn = turn + 1
 
                 if turn % self.test_point == 0:
-                    m, a, b = self.predict_deterministic(X_test)
-                    auc = F.mse_loss(m, y_test).item()
-                    self.running_score.append(auc)
-                    print(
-                        "after %d th batch(%.3f), the score is %.4f"
-                        % (turn, float(turn) / self.N_turns, auc)
-                    )
+                    with torch.no_grad():
+                        m, a, b = self.predict_deterministic(X_test)
+                        auc = torch.sqrt(F.mse_loss(m, y_test)).item()
+                        self.running_score.append(auc)
+                        print(
+                            "after %d th batch(%.3f), the score is %.4f"
+                            % (turn, float(turn) / self.N_turns, auc)
+                        )
 
             return self.running_score
 

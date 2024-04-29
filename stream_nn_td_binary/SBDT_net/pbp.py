@@ -7,7 +7,7 @@ from .prior import Prior
 
 class PBP:
     def __init__(
-        self, layer_sizes, mean_y_train, std_y_train, R, ndims, n_stream_batch
+        self, layer_sizes, mean_y_train, std_y_train, R, ndims, n_stream_batch, device
     ):
         var_targets = 1
         self.std_y_train = std_y_train
@@ -16,7 +16,7 @@ class PBP:
         self.R = R
 
         # We initialize the prior
-        self.prior = Prior(layer_sizes, var_targets, R, ndims)
+        self.prior = Prior(layer_sizes, var_targets, R, ndims, device)
 
         # We create the network
         params = self.prior.get_initial_params()
@@ -28,6 +28,7 @@ class PBP:
             params["a"],
             params["b"],
             n_stream_batch,
+            device,
         )
 
     def do_pbp(self, X_train, y_train, n_iterations):
@@ -41,7 +42,7 @@ class PBP:
                 params = self.prior.refine_prior(params)
                 self.network.set_params(params)
 
-            print("0")
+            # print("0")
 
             for i in range(int(n_iterations) - 1):
                 # We do one more pass
@@ -52,15 +53,16 @@ class PBP:
                 params = self.prior.refine_prior(params)
                 self.network.set_params(params)
 
-                print(i + 1)
+                # print(i + 1)
 
     def predict_deterministic(self, test_x):
-        return self.network.output_deterministic(test_x)
+        return self.network.output_deterministic(test_x).cpu()
 
     def get_deterministic_output(self, X_test):
-        output = []
-        for i in range(X_test.shape[0]):
-            output.append(self.predict_deterministic(X_test[i, :]))
+        # output = []
+        # for i in range(X_test.shape[0]):
+        #     output.append(self.predict_deterministic(X_test[i, :]))
+        output = [self.predict_deterministic(x) for x in X_test]
         params = self.network.get_params()
         return output, params["a"], params["b"]
 
@@ -78,7 +80,7 @@ class PBP:
             if counter * self.stream_batch % 1000 == 0:
                 print(".", end="")
             counter += self.stream_batch
-        print()
+        # print()
 
     def sample_w(self):
         self.network.sample_w()

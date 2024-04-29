@@ -1,6 +1,6 @@
 import math
+
 import torch
-from torch.autograd import grad
 
 from .embedding import Embedding
 from .network_layer import NetworkLayer

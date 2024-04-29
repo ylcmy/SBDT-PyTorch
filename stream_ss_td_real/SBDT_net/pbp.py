@@ -55,7 +55,7 @@ class PBP:
                     params = self.prior.refine_prior(params)
                     self.network.set_params(params)
 
-                print(i + 1)
+                # print(i + 1)
 
     def predict_deterministic(self, test_x):
         return self.network.output_deterministic(test_x)
@@ -82,7 +82,7 @@ class PBP:
             # if counter * self.stream_batch % 1000 == 0:
             #     print(".", end="")
             counter += self.stream_batch
-        print()
+        # print()
 
     def sample_w(self):
         self.network.sample_w()

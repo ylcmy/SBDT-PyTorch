@@ -2,6 +2,7 @@ import gzip
 import pickle
 
 import numpy as np
+from sklearn.metrics import roc_auc_score
 import torch
 from torch.autograd import grad
 
@@ -21,6 +22,7 @@ class PBP_net:
         n_stream_batch=1,
         mini_batch=100,
         mode="single",
+        device="cpu",
     ):
         self.R = R
         self.nmod = len(ndims)
@@ -29,7 +31,7 @@ class PBP_net:
         self.stream_batch = n_stream_batch
         self.mode = mode
         self.mini_batch = mini_batch
-        self.y_train_normalized = (y_train - self.mean_y_train) / self.std_y_train
+        self.y_train_normalized = y_train
         self.X_train = X_train
         self.n_epochs = n_epochs
         self.N_turns = self.X_train.shape[0] / self.mini_batch
@@ -45,6 +47,7 @@ class PBP_net:
             self.R,
             ndims,
             n_stream_batch,
+            device,
         )
 
     def pbp_train(self, X_test, y_test, help_str=""):
@@ -63,9 +66,19 @@ class PBP_net:
                 self.pbp_instance.do_pbp(X_sub, y_sub, self.n_epochs)
 
                 count = count + mini_batch
-                print("finish  %d / %d " % (count, self.X_train.shape[0]) + help_str)
+                # print("finish  %d / %d " % (count, self.X_train.shape[0]) + help_str)
 
                 turn = turn + 1
+                if turn % self.test_point == 0:
+                    with torch.no_grad():
+                        m, a, b = self.pbp_instance.get_deterministic_output(X_test)
+                        # We compute the test AUC
+                        auc = roc_auc_score(y_test.cpu().numpy(), m)
+                        print(
+                            "after %d th batch(%.3f), the score is %.4f"
+                            % (turn, float(turn) / self.N_turns, auc)
+                        )
+                        self.running_score.append(auc)
 
             return self.running_score
 

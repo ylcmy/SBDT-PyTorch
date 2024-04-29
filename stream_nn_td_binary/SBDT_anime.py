@@ -7,6 +7,8 @@ import torch
 from SBDT_net import PBP_net
 from sklearn.metrics import roc_auc_score
 
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
+
 # torch.autograd.set_detect_anomaly(True)
 """
 load anime
@@ -17,10 +19,10 @@ y = np.loadtxt("./data_binary/anime/anime_train_y.txt").astype(int)
 ind_test = np.loadtxt("./data_binary/anime/anime_test_ind.txt").astype(int)
 y_test = np.loadtxt("./data_binary/anime/anime_test_y.txt").astype(int)
 
-ind = torch.from_numpy(ind).float()
-y = torch.from_numpy(y).float()
-ind_test = torch.from_numpy(ind_test).float()
-y_test = torch.from_numpy(y_test).float()
+ind = torch.from_numpy(ind).float().to(device=device)
+y = torch.from_numpy(y).float().to(device=device)
+ind_test = torch.from_numpy(ind_test).float().to(device=device)
+y_test = torch.from_numpy(y_test).float().to(device=device)
 
 print("loaded")
 
@@ -62,17 +64,22 @@ for mini_batch in mini_batch_list:
                 n_stream_batch=n_stream_batch,
                 mode=mode,
                 mini_batch=mini_batch,
+                device=device,
             )
 
             running_performance = np.array(net.pbp_train(X_test, y_test, help_str))
+            file_name = "running_result/%s.txt" % (help_str)
+            os.makedirs(os.path.dirname(file_name), exist_ok=True)
+            np.savetxt(file_name, np.c_[running_performance])
+            print("\n  saved!\n")
+
             total_turn = float(X_train.shape[0]) / mini_batch
             running_time = (time.time() - fold_start) * total_turn / 100
             time_list[i] = running_time
 
             with torch.no_grad():
                 m, a, b = net.predict_deterministic(X_test)
-                auc = roc_auc_score(y_test, m)
-
+                auc = roc_auc_score(y_test.cpu().numpy(), m)
                 # rmse = np.sqrt(np.mean((y_test - m)**2))
 
                 print("auc=%f" % (auc))
@@ -92,11 +99,9 @@ for mini_batch in mini_batch_list:
         file_path = "new_result/anime_result_v1.txt"
         directory = os.path.dirname(file_path)
 
-        # 如果文件夹不存在，创建文件夹
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        # 打开文件
         f = open(file_path, "a+")
         f.write("R = %d, mini_batch =%s " % (R, mini_batch))
         f.write(
