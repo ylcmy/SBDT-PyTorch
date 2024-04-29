@@ -75,7 +75,21 @@ class Prior:
         self.m_u_hat_nat = nn.ParameterList()
         self.v_u_hat_nat = nn.ParameterList()
 
-        for i in range(len(ndims)):
+        # Add a core tensor like Tucker decomposition
+        dim = len(ndims)
+        self.rnd_m_core = nn.Parameter(
+            1 / R * torch.randn((R**dim), device=device, requires_grad=True)
+        )
+        self.m_core_hat_nat = nn.Parameter(
+            torch.zeros((R**dim), device=device, requires_grad=True)
+        )
+        self.v_core_hat_nat = nn.Parameter(
+            (self.a_u - 1)
+            / self.b_u
+            * torch.ones((R**dim), device=device, requires_grad=True)
+        )
+
+        for i in range(dim):
             self.rnd_m_u.append(
                 nn.Parameter(
                     1
@@ -108,6 +122,8 @@ class Prior:
             "v_w": v_w,
             "m_u": m_u,
             "v_u": v_u,
+            "m_core": self.rnd_m_core,
+            "v_core": 1.0 / self.v_core_hat_nat,
             "a": self.m_sigma,
             "b": self.v_sigma,
         }

@@ -2,16 +2,14 @@ import math
 import os
 import time
 
-from sklearn.metrics import roc_auc_score
-
 import data_loader
 import numpy as np
 import torch
-import torch.nn.functional as F
 from SBDT_net import PBP_net
+from sklearn.metrics import roc_auc_score
 
 np.random.seed(1)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 # load dblp
 
@@ -28,16 +26,14 @@ y_test = torch.from_numpy(y_test).float().to(device=device)
 
 print("loaded")
 
-n_hidden_units = 50
+n_hidden_units = 100
 n_epochs = 1
 n_stream_batch = 1
-
-# mini_batch_list = [64,128,512]
-# R_list = [8]
+avg_num = 1
 
 mini_batch_list = [256]  # [64,128,512]
 R_list = [3, 5, 8, 10]
-avg_num = 1
+
 dir = "./new_result"
 if not os.path.exists(dir):
     os.makedirs(dir)
@@ -55,7 +51,6 @@ for mini_batch in mini_batch_list:
             X_train = ind
             y_train = y
             perm = torch.randperm(X_train.size(0))
-            # perm = perm[:int(0.001*perm.size)]
             X_train = X_train[perm]
             y_train = y_train[perm]
 

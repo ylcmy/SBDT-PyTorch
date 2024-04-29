@@ -25,6 +25,8 @@ class PBP:
             params["v_w"],
             params["m_u"],
             params["v_u"],
+            params["m_core"],
+            params["v_core"],
             params["a"],
             params["b"],
             n_stream_batch,
@@ -42,7 +44,7 @@ class PBP:
                 params = self.prior.refine_prior(params)
                 self.network.set_params(params)
 
-            print("0")
+            # print("0")
 
             for i in range(int(n_iterations) - 1):
                 # We do one more pass
@@ -53,7 +55,7 @@ class PBP:
                 params = self.prior.refine_prior(params)
                 self.network.set_params(params)
 
-                print(i + 1)
+                # print(i + 1)
 
     def predict_deterministic(self, test_x):
         return self.network.output_deterministic(test_x).cpu()
@@ -77,10 +79,10 @@ class PBP:
             new_params = self.network.get_params()
             self.network.remove_invalid_updates(new_params, old_params)
             self.network.set_params(new_params)
-            if counter * self.stream_batch % 1000 == 0:
-                print(".", end="")
+            # if counter * self.stream_batch % 1000 == 0:
+            #     print(".", end="")
             counter += self.stream_batch
-        print()
+        # print()
 
     def sample_w(self):
         self.network.sample_w()

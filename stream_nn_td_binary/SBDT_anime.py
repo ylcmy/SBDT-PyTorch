@@ -7,7 +7,8 @@ import torch
 from SBDT_net import PBP_net
 from sklearn.metrics import roc_auc_score
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+np.random.seed(1)
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 # torch.autograd.set_detect_anomaly(True)
 """
@@ -21,19 +22,22 @@ y_test = np.loadtxt("./data_binary/anime/anime_test_y.txt").astype(int)
 
 ind = torch.from_numpy(ind).float().to(device=device)
 y = torch.from_numpy(y).float().to(device=device)
-ind_test = torch.from_numpy(ind_test - 1).float().to(device=device)
+ind_test = torch.from_numpy(ind_test).float().to(device=device)
 y_test = torch.from_numpy(y_test).float().to(device=device)
 
 print("loaded")
 
-avg_num = 1
 n_hidden_units = 50
 n_epochs = 1
 n_stream_batch = 1
+avg_num = 1
 
 R_list = [3, 5, 8, 10]
 mini_batch_list = [256]  # [64,128,512]
 
+dir = "./new_result"
+if not os.path.exists(dir):
+    os.makedirs(dir)
 mode = "minibatch"
 
 for mini_batch in mini_batch_list:
@@ -95,16 +99,12 @@ for mini_batch in mini_batch_list:
             "\navg of auc: %.6g , std of auc is %.6g"
             % (auc_list.mean(), auc_list.std())
         )
+        print("\n take %g seconds to finish the setting" % (time.time() - set_start))
 
-        file_path = "new_result/anime_result_v1.txt"
-        directory = os.path.dirname(file_path)
-
-        # 如果文件夹不存在，创建文件夹
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
+        file_name = "anime_result_v1.txt"
+        file = os.path.join(dir, file_name)
         # 打开文件
-        f = open(file_path, "a+")
+        f = open(file, "a+")
         f.write("R = %d, mini_batch =%s " % (R, mini_batch))
         f.write(
             "\navg of auc: %.6g , std of auc is %.6g"

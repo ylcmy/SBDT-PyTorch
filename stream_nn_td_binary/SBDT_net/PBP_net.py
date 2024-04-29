@@ -31,13 +31,15 @@ class PBP_net:
         self.stream_batch = n_stream_batch
         self.mode = mode
         self.mini_batch = mini_batch
-        self.y_train_normalized = (y_train - self.mean_y_train) / self.std_y_train
+        self.y_train_normalized = y_train
         self.X_train = X_train
         self.n_epochs = n_epochs
         self.N_turns = self.X_train.shape[0] / self.mini_batch
         self.test_point = int(0.05 * self.X_train.shape[0] / self.mini_batch)
 
-        n_units_per_layer = np.concatenate(([self.nmod * self.R], n_hidden, [1]))
+        n_units_per_layer = np.concatenate(
+            ([self.nmod * self.R + self.R**self.nmod], n_hidden, [1])
+        )
         self.running_score = []
 
         self.pbp_instance = PBP(
@@ -66,7 +68,7 @@ class PBP_net:
                 self.pbp_instance.do_pbp(X_sub, y_sub, self.n_epochs)
 
                 count = count + mini_batch
-                print("finish  %d / %d " % (count, self.X_train.shape[0]) + help_str)
+                # print("finish  %d / %d " % (count, self.X_train.shape[0]) + help_str)
 
                 turn = turn + 1
                 if turn % self.test_point == 0:

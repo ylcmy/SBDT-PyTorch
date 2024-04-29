@@ -12,6 +12,8 @@ class Network:
         v_w_init,
         m_u_init,
         v_u_init,
+        m_core_init,
+        v_core_init,
         a_init,
         b_init,
         n_stream_batch,
@@ -39,13 +41,17 @@ class Network:
         if len(m_u_init) > 1:
             for m_u, v_u in zip(m_u_init, v_u_init):
                 self.params_embed.append(Embedding(m_u, v_u, device))
+        self.params_embed.append(Embedding(m_core_init, v_core_init, device))
 
         self.params_m_u = []
         self.params_v_u = []
 
-        for embed in self.params_embed:
+        for embed in self.params_embed[:-1]:
             self.params_m_u.append(embed.m_u)
             self.params_v_u.append(embed.v_u)
+
+        self.params_m_core = self.params_embed[-1].m_u
+        self.params_v_core = self.params_embed[-1].v_u
 
         self.a = torch.tensor(
             float(a_init), dtype=torch.float32, device=device, requires_grad=True
@@ -90,6 +96,9 @@ class Network:
             prod = self.params_m_u[i].grad ** 2 * self.params_v_u[i]
             v += prod.sum()
             self.params_m_u[i].grad.zero_()
+        prod = self.params_m_core.grad**2 * self.params_v_core
+        v += prod.sum()
+        self.params_m_core.grad.zero_()
 
         cdf_input = (2 * y - 1) * f / torch.sqrt(1 + v)
         logZ = torch.log(0.5 * (1 + torch.erf(cdf_input / 1.4142135)))
@@ -121,14 +130,29 @@ class Network:
                 )
                 self.params_m_u[i].grad.zero_()
                 self.params_v_u[i].grad.zero_()
-                # print(grad_m_u, grad_v_u)
+
+            grad_m_core = self.params_m_core.grad
+            grad_v_core = self.params_v_core.grad
+            # print("********************************")
+            # print(grad_m_core, grad_v_core)
+
+            self.params_m_core.add_(self.params_v_core * grad_m_core)
+            self.params_v_core.sub_(
+                self.params_v_core**2 * (grad_m_core**2 - 2 * grad_v_core)
+            )
+            self.params_m_core.grad.zero_()
+            self.params_v_core.grad.zero_()
+            # print(self.params_m_core, self.params_v_core)
 
     def get_embed(self, x):
         embed_list = []
         for i in range(len(self.params_m_u)):
             indx = x[i]
             embed_list.append(self.params_m_u[i][int(indx.item())])
-        return torch.cat(embed_list).flatten()
+        embed_list.append(self.params_m_core)
+        output = torch.cat(embed_list).flatten()
+        # print(output)
+        return output
 
     def get_params(self):
         m_w = [layer.m_w.clone() for layer in self.layers]

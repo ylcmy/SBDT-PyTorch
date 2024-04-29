@@ -61,10 +61,14 @@ class PBP:
         return self.network.output_deterministic(test_x)
 
     def get_deterministic_output(self, X_test):
-        output = torch.zeros(X_test.shape[0], device=self.device)
-        for i in range(X_test.shape[0]):
-            output[i] = self.predict_deterministic(X_test[i, :])
-            output[i] = output[i] * self.std_y_train + self.mean_y_train
+        # output = torch.zeros(X_test.shape[0], device=self.device)
+        # for i in range(X_test.shape[0]):
+        #     output[i] = self.predict_deterministic(X_test[i, :])
+        #     output[i] = output[i] * self.std_y_train + self.mean_y_train
+        output = [
+            self.predict_deterministic(x) * self.std_y_train + self.mean_y_train
+            for x in X_test
+        ]
         params = self.network.get_params()
         return output, params["a"], params["b"]
 
