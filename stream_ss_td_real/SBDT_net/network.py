@@ -13,10 +13,12 @@ class Network:
         v_w_init,
         m_u_init,
         v_u_init,
+        m_core_init,
+        v_core_init,
         a_init,
         b_init,
         n_stream_batch,
-        device="cpu",
+        device,
     ):
         self.n_stream_batch = n_stream_batch
         self.device = device
@@ -24,11 +26,9 @@ class Network:
 
         if len(m_w_init) > 1:
             for m_w, v_w in zip(m_w_init[:-1], v_w_init[:-1]):
-                self.layers.append(NetworkLayer(m_w, v_w, True, device=device))
+                self.layers.append(NetworkLayer(m_w, v_w, True, device))
 
-        self.layers.append(
-            NetworkLayer(m_w_init[-1], v_w_init[-1], False, device=device)
-        )
+        self.layers.append(NetworkLayer(m_w_init[-1], v_w_init[-1], False, device))
 
         self.params_m_w = []
         self.params_v_w = []
@@ -42,13 +42,17 @@ class Network:
         if len(m_u_init) > 1:
             for m_u, v_u in zip(m_u_init, v_u_init):
                 self.params_embed.append(Embedding(m_u, v_u, device))
+        self.params_embed.append(Embedding(m_core_init, v_core_init, device))
 
         self.params_m_u = []
         self.params_v_u = []
 
-        for embed in self.params_embed:
+        for embed in self.params_embed[:-1]:
             self.params_m_u.append(embed.m_u)
             self.params_v_u.append(embed.v_u)
+
+        self.params_m_core = self.params_embed[-1].m_u
+        self.params_v_core = self.params_embed[-1].v_u
 
         self.a = torch.tensor(
             [a_init], dtype=torch.float32, device=device, requires_grad=True
@@ -60,7 +64,7 @@ class Network:
     def output_deterministic(self, x):
         x = self.get_embed(x).unsqueeze(-1)
         for layer in self.layers:
-            x = layer.output_deterministic(x)
+            x = layer(x)
         return x[0]
 
     def output_probabilistic(self, m):
@@ -94,6 +98,9 @@ class Network:
             prod = self.params_m_u[i].grad ** 2 * self.params_v_u[i]
             v += prod.sum()
             self.params_m_u[i].grad.zero_()
+        prod = self.params_m_core.grad**2 * self.params_v_core
+        v += prod.sum()
+        self.params_m_core.grad.zero_()
 
         v_final = v + 1.0 / tau
         # Gaussian PDF computation
@@ -127,6 +134,19 @@ class Network:
                 self.params_m_u[i].grad.zero_()
                 self.params_v_u[i].grad.zero_()
                 # print(grad_m_u, grad_v_u)
+
+            grad_m_core = self.params_m_core.grad
+            grad_v_core = self.params_v_core.grad
+            # print("********************************")
+            # print(grad_m_core, grad_v_core)
+
+            self.params_m_core.add_(self.params_v_core * grad_m_core)
+            self.params_v_core.sub_(
+                self.params_v_core**2 * (grad_m_core**2 - 2 * grad_v_core)
+            )
+            self.params_m_core.grad.zero_()
+            self.params_v_core.grad.zero_()
+
             self.a.copy_(a_star)
             self.b.copy_(b_star)
 
@@ -135,7 +155,10 @@ class Network:
         for i in range(len(self.params_m_u)):
             indx = x[i]
             embed_list.append(self.params_m_u[i][int(indx.item())])
-        return torch.cat(embed_list).flatten()
+        embed_list.append(self.params_m_core)
+        output = torch.cat(embed_list).flatten()
+        # print(output)
+        return output
 
     def get_params(self):
         with torch.no_grad():

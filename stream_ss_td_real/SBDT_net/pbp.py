@@ -14,10 +14,9 @@ class PBP:
         self.mean_y_train = mean_y_train
         self.stream_batch = n_stream_batch
         self.R = R
-        self.device = device
 
         # We initialize the prior
-        self.prior = Prior(layer_sizes, var_targets, R, ndims)
+        self.prior = Prior(layer_sizes, var_targets, R, ndims, device)
 
         # We create the network
         params = self.prior.get_initial_params()
@@ -26,10 +25,12 @@ class PBP:
             params["v_w"],
             params["m_u"],
             params["v_u"],
+            params["m_core"],
+            params["v_core"],
             params["a"],
             params["b"],
             n_stream_batch,
-            device=device,
+            device,
         )
 
     def do_pbp(self, X_train, y_train, n_iterations):
@@ -55,7 +56,7 @@ class PBP:
                     params = self.prior.refine_prior(params)
                     self.network.set_params(params)
 
-                print(i + 1)
+                # print(i + 1)
 
     def predict_deterministic(self, test_x):
         return self.network.output_deterministic(test_x)
@@ -86,7 +87,7 @@ class PBP:
             # if counter * self.stream_batch % 1000 == 0:
             #     print(".", end="")
             counter += self.stream_batch
-        print()
+        # print()
 
     def sample_w(self):
         self.network.sample_w()

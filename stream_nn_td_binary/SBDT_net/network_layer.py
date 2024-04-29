@@ -1,10 +1,8 @@
 import math
-from turtle import forward
 
 import torch
 import torch.nn.functional as F
 from torch import nn
-
 
 # class NetworkLayer:
 #     def __init__(self, m_w_init, v_w_init, non_linear=True, device="cpu"):

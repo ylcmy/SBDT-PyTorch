@@ -1,0 +1,36 @@
+R = 3, mini_batch =256 
+avg of auc: 0.868788 , std of auc is 0
+the exact value is [0.8687881]
+mean(tau): 0, var(tau): 0
+take 4699 seconds to finish the setting, avg time is 4699 
+
+R = 3, mini_batch =256 
+avg of auc: 0.876627 , std of auc is 0
+the exact value is [0.87662682]
+mean(tau): 0, var(tau): 0
+take 1283 seconds to finish the setting, avg time is 1283 
+
+R = 5, mini_batch =256 
+avg of auc: 0.880357 , std of auc is 0
+the exact value is [0.88035716]
+mean(tau): 0, var(tau): 0
+take 1723 seconds to finish the setting, avg time is 1723 
+
+R = 8, mini_batch =256 
+avg of auc: 0.867495 , std of auc is 0
+the exact value is [0.86749505]
+mean(tau): 0, var(tau): 0
+take 2218 seconds to finish the setting, avg time is 2218 
+
+R = 10, mini_batch =256 
+avg of auc: 0.838826 , std of auc is 0
+the exact value is [0.83882578]
+mean(tau): 0, var(tau): 0
+take 2585 seconds to finish the setting, avg time is 2585 
+
+R = 3, mini_batch =256 
+avg of auc: 0.87312 , std of auc is 0
+the exact value is [0.87311995]
+mean(tau): 0, var(tau): 0
+take 3936 seconds to finish the setting, avg time is 3936 
+

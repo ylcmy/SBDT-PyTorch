@@ -6,7 +6,7 @@ import torch.nn as nn
 
 
 class Prior:
-    def __init__(self, layer_sizes, var_targets, R, ndims):
+    def __init__(self, layer_sizes, var_targets, R, ndims, device):
         self.R = R
         self.ndims = ndims
 
@@ -39,26 +39,74 @@ class Prior:
         for size_out, size_in in zip(layer_sizes[1:], layer_sizes[:-1]):
             self.rnd_m_w.append(
                 nn.Parameter(
-                    1.0 / math.sqrt(size_in + 1) * torch.randn(size_out, size_in + 1)
+                    1.0
+                    / math.sqrt(size_in + 1)
+                    * torch.randn(
+                        (size_out, size_in + 1), device=device, requires_grad=True
+                    )
                 )
             )
-            self.m_w_hat_nat.append(nn.Parameter(torch.zeros(size_out, size_in + 1)))
+            self.m_w_hat_nat.append(
+                nn.Parameter(
+                    torch.zeros(
+                        (size_out, size_in + 1), device=device, requires_grad=True
+                    )
+                )
+            )
             self.v_w_hat_nat.append(
                 nn.Parameter(
-                    (self.a_w - 1) / self.b_w * torch.ones(size_out, size_in + 1)
+                    (self.a_w - 1)
+                    / self.b_w
+                    * torch.ones(
+                        (size_out, size_in + 1), device=device, requires_grad=True
+                    )
                 )
             )
-            self.rho_w_hat_nat.append(nn.Parameter(torch.zeros(size_out, size_in + 1)))
+            self.rho_w_hat_nat.append(
+                nn.Parameter(
+                    torch.zeros(
+                        (size_out, size_in + 1), device=device, requires_grad=True
+                    )
+                )
+            )
 
         self.rnd_m_u = nn.ParameterList()
         self.m_u_hat_nat = nn.ParameterList()
         self.v_u_hat_nat = nn.ParameterList()
 
-        for i in range(len(ndims)):
-            self.rnd_m_u.append(nn.Parameter(1 / R * torch.randn(ndims[i], R)))
-            self.m_u_hat_nat.append(nn.Parameter(torch.zeros(ndims[i], R)))
+        # Add a core tensor like Tucker decomposition
+        dim = len(ndims)
+        self.rnd_m_core = nn.Parameter(
+            1 / R * torch.randn((R**dim), device=device, requires_grad=True)
+        )
+        self.m_core_hat_nat = nn.Parameter(
+            torch.zeros((R**dim), device=device, requires_grad=True)
+        )
+        self.v_core_hat_nat = nn.Parameter(
+            (self.a_u - 1)
+            / self.b_u
+            * torch.ones((R**dim), device=device, requires_grad=True)
+        )
+
+        for i in range(dim):
+            self.rnd_m_u.append(
+                nn.Parameter(
+                    1
+                    / R
+                    * torch.randn((ndims[i], R), device=device, requires_grad=True)
+                )
+            )
+            self.m_u_hat_nat.append(
+                nn.Parameter(
+                    torch.zeros((ndims[i], R), device=device, requires_grad=True)
+                )
+            )
             self.v_u_hat_nat.append(
-                nn.Parameter((self.a_u - 1) / self.b_u * torch.ones(ndims[i], R))
+                nn.Parameter(
+                    (self.a_u - 1)
+                    / self.b_u
+                    * torch.ones((ndims[i], R), device=device, requires_grad=True)
+                )
             )
 
     def get_initial_params(self):
@@ -73,6 +121,8 @@ class Prior:
             "v_w": v_w,
             "m_u": m_u,
             "v_u": v_u,
+            "m_core": self.rnd_m_core,
+            "v_core": 1.0 / self.v_core_hat_nat,
             "a": self.m_sigma,
             "b": self.v_sigma,
         }

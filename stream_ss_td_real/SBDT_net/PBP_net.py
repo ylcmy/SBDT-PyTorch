@@ -37,7 +37,9 @@ class PBP_net:
         self.N_turns = self.X_train.shape[0] / self.mini_batch
         self.test_point = int(0.05 * self.X_train.shape[0] / self.mini_batch)
 
-        n_units_per_layer = np.concatenate(([self.nmod * self.R], n_hidden, [1]))
+        n_units_per_layer = np.concatenate(
+            ([self.nmod * self.R + self.R**self.nmod], n_hidden, [1])
+        )
         self.running_score = []
 
         self.pbp_instance = PBP(
@@ -66,18 +68,17 @@ class PBP_net:
                 self.pbp_instance.do_pbp(X_sub, y_sub, self.n_epochs)
 
                 count = count + mini_batch
-                print("finish  %d / %d " % (count, self.X_train.shape[0]) + help_str)
+                # print("finish  %d / %d " % (count, self.X_train.shape[0]) + help_str)
 
                 turn = turn + 1
-
                 if turn % self.test_point == 0:
                     with torch.no_grad():
                         m, a, b = self.predict_deterministic(X_test)
-                        auc = torch.sqrt(F.mse_loss(m, y_test)).item()
-                        self.running_score.append(auc)
+                        rmse = torch.sqrt(F.mse_loss(m, y_test)).item()
+                        self.running_score.append(rmse)
                         print(
                             "after %d th batch(%.3f), the score is %.4f"
-                            % (turn, float(turn) / self.N_turns, auc)
+                            % (turn, float(turn) / self.N_turns, rmse)
                         )
 
             return self.running_score
