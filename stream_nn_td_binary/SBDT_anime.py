@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 import time
@@ -32,8 +33,11 @@ n_epochs = 1
 n_stream_batch = 1
 avg_num = 1
 
+# mini_batch_list = [64, 128, 256, 512]
+# R_list = [8]
+
 R_list = [3, 5, 8, 10]
-mini_batch_list = [256]  # [64,128,512]
+mini_batch_list = [256]
 
 dir = "./new_result"
 if not os.path.exists(dir):
@@ -42,6 +46,7 @@ mode = "minibatch"
 
 for mini_batch in mini_batch_list:
     for R in R_list:
+        n_hidden_units = 50 * math.ceil(R ** len(ndims) / 50)
         help_str = "anime_" + str(mini_batch) + "_" + str(R)
         auc_list = np.zeros(avg_num)
         set_start = time.time()
@@ -85,21 +90,21 @@ for mini_batch in mini_batch_list:
                 m, a, b = net.predict_deterministic(X_test)
                 auc = roc_auc_score(y_test.cpu().numpy(), m)
                 # rmse = np.sqrt(np.mean((y_test - m)**2))
-
-                print("auc=%f" % (auc))
-                print("a, b, mean(tau), var(tau)")
                 print(
                     "take %g seconds to finish fold %d" % (time.time() - fold_start, i)
                 )
+                print("auc=%f" % (auc))
+                print("a, b, mean(tau), var(tau)")
                 print(a, b, a / b, a / (b**2))
 
                 auc_list[i] = auc
 
+        final_time = time.time() - set_start
+        print("\n take %g seconds to finish the setting" % (final_time))
         print(
             "\navg of auc: %.6g , std of auc is %.6g"
             % (auc_list.mean(), auc_list.std())
         )
-        print("\n take %g seconds to finish the setting" % (time.time() - set_start))
 
         file_name = "anime_result_v1.txt"
         file = os.path.join(dir, file_name)
@@ -112,7 +117,6 @@ for mini_batch in mini_batch_list:
         )
         f.write("\nthe exact value is %s" % str(auc_list))
         f.write("\nmean(tau): %.5g, var(tau): %.5g" % (a / b, a / (b**2)))
-        final_time = time.time() - set_start
         f.write(
             "\ntake %.4g seconds to finish the setting, avg time is %.4g "
             % (final_time, final_time / avg_num)
