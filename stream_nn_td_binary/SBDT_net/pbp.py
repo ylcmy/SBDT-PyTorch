@@ -77,8 +77,8 @@ class PBP:
             new_params = self.network.get_params()
             self.network.remove_invalid_updates(new_params, old_params)
             self.network.set_params(new_params)
-            if counter * self.stream_batch % 1000 == 0:
-                print(".", end="")
+            # if counter * self.stream_batch % 1000 == 0:
+            #     print(".", end="")
             counter += self.stream_batch
         # print()
 

@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from SBDT_net import PBP_net
 
 np.random.seed(1)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 # load dblp
 
@@ -37,7 +37,7 @@ n_stream_batch = 1
 
 mini_batch_list = [256]  # [64,128,512]
 R_list = [3, 5, 8, 10]
-avg_num = 1
+avg_num = 5
 dir = "./new_result"
 if not os.path.exists(dir):
     os.makedirs(dir)

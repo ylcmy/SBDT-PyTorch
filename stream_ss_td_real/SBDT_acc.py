@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from SBDT_net import PBP_net
 
 np.random.seed(1)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 # load acc
 
@@ -28,12 +28,13 @@ n_hidden_units = 50
 n_epochs = 1
 n_stream_batch = 1
 
-# mini_batch_list = [64,128,512]
+# mini_batch_list = [64,128,256,512]
 # R_list = [8]
 
-mini_batch_list = [256]  # [64,128,512]
-R_list = [3, 5, 8, 10]
-avg_num = 1
+mini_batch_list = [256]
+R_list = [8, 10]
+# R_list = [3, 5, 8, 10]
+avg_num = 5
 dir = "./new_result"
 if not os.path.exists(dir):
     os.makedirs(dir)
@@ -80,7 +81,7 @@ for mini_batch in mini_batch_list:
             with torch.no_grad():
                 m, a, b = net.predict_deterministic(X_test)
                 # We compute the test MSE
-                mse = F.mse_loss(m, y_test).item()
+                mse = torch.sqrt(F.mse_loss(m, y_test)).item()
                 print("mse = %f" % (mse))
                 print("a, b, mean(tau), var(tau)")
                 print(

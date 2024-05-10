@@ -26,7 +26,7 @@ y_test = torch.from_numpy(y_test).float().to(device=device)
 
 print("loaded")
 
-avg_num = 1
+avg_num = 5
 n_hidden_units = 50
 n_epochs = 1
 n_stream_batch = 1
